@@ -1,0 +1,9 @@
+*.pfx
+*.p12
+*.pem
+*.key
+*.csr
+*.srl
+.pfx-upgrade*
+.env
+.env.*

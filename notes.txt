@@ -1,0 +1,72 @@
+OpenSSL 3.0 removes or deprecates some legacy algorithms (e.g., RC2, DES) that older PFX files may contain. If your PFX uses such algorithms, OpenSSL 3 will fail to parse it 
+www.docuseal.com
+www.docuseal.com
+. Converting it to a new PFX with supported algorithms resolves this.
+
+Step‑by‑step conversion (OpenSSL 3) 
+www.docuseal.com
+www.docuseal.com
+Make a copy of the original PFX
+
+Bash
+
+Copy
+cp oldcert.pfx temp_certificate.pfx
+Convert PFX to PEM (certificate only, unencrypted key)
+Replace CERTIFICATE_PASSWORD with your PFX password:
+
+Bash
+
+Copy
+openssl pkcs12 -legacy -in temp_certificate.pfx \
+  -out temp_certificate.pem -nodes -passin pass:CERTIFICATE_PASSWORD
+This produces temp_certificate.pem containing the certificate and the private key in PEM format (unencrypted).
+
+Extract the private key (encrypted)
+
+Bash
+
+Copy
+openssl pkcs12 -legacy -in temp_certificate.pfx \
+  -nocerts -out temp_certificate.key -passin pass:CERTIFICATE_PASSWORD \
+  -passout pass:CERTIFICATE_PASSWORD
+This yields temp_certificate.key (encrypted with the same password).
+
+Re‑export a new PFX
+
+Bash
+
+Copy
+openssl pkcs12 -export -out new_certificate.pfx \
+  -inkey temp_certificate.key -in temp_certificate.pem \
+  -passin pass:CERTIFICATE_PASSWORD -passout pass:CERTIFICATE_PASSWORD
+This creates new_certificate.pfx compatible with OpenSSL 3.
+
+Clean up temporary files
+
+Bash
+
+Copy
+rm -rf temp_certificate.pfx temp_certificate.pem temp_certificate.key
+Important notes
+Password security: The PFX password is required for all steps. Keep it safe and delete temporary files after conversion 
+www.docuseal.com
+www.docuseal.com
+.
+
+Algorithm check: If the original PFX uses deprecated algorithms, OpenSSL 3 will fail at step 2. In that case, you may need to request a new certificate from your CA that uses OpenSSL 3‑compatible algorithms.
+
+Chain inclusion: If your original PFX included intermediate certificates, you can include them in the new PFX by adding -certfile for each intermediate in the OpenSSL export command 
+SSL.com
+SSL.com
+.
+
+Platform: These commands work on Linux/macOS; on Windows, use OpenSSL for Windows or PowerShell with the openssl module.
+
+Alternative: IIS export/import
+If you are on Windows and using IIS, you can also export the old PFX with AES256_SHA256 and import the new one, but this does not change the underlying algorithm — you still need to convert the PFX if it uses unsupported algorithms 
+SSL Dragon
+SSL Dragon
+.
+
+In summary: Extract the cert/key from the old PFX, re‑export it with OpenSSL 3, and ensure the new PFX uses only supported algorithms. This yields an upgrade‑ready PFX for OpenSSL 3 environme
